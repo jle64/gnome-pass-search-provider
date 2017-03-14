@@ -18,20 +18,23 @@
 # Copyright (C) 2017 Jonathan Lestrelin
 # Author: Jonathan Lestrelin <jonathan.lestrelin@gmail.com>
 
-# This project was based on a fork from gnome-shell-search-github-repositories
-# which itself was based on a fork from fedmsg-notify
+# This project was based gnome-shell-search-github-repositories
+# which itself was based fedmsg-notify
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Ralph Bean <rbean@redhat.com>
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Luke Macken <lmacken@redhat.com>
 
+from subprocess import call
+from os import walk
+from os.path import expanduser
+import re
+
+from gi.repository import GLib
+
 import dbus
 import dbus.glib
 import dbus.service
-
-from gi.repository import Gio, GLib
-
-config_tool = "gnome-shell-search-pass-config"
 
 # Convenience shorthand for declaring dbus interface methods.
 # s.b.n. -> search_bus_name
@@ -52,41 +55,56 @@ class SearchPassService(dbus.service.Object):
     _search_cache = {}
     _request_cache = {}
 
-    _object_path = '/%s' % bus_name.replace('.', '/')
-    __name__ = "SearchPassService"
+    _object_path = '/' + bus_name.replace('.', '/')
+    __name__ = 'SearchPassService'
 
     def __init__(self):
-        self.settings = Gio.Settings.new(self.bus_name)
-        if not self.settings.get_boolean('enabled'):
-            return
-
         self.session_bus = dbus.SessionBus()
         bus_name = dbus.service.BusName(self.bus_name, bus=self.session_bus)
         dbus.service.Object.__init__(self, bus_name, self._object_path)
-        self.enabled = True
+        self.password_store = expanduser('~/.password-store')
 
-    @dbus.service.method(in_signature='s', **sbn)
-    def ActivateResult(self, search_id):
-        print(search_id)
+    @dbus.service.method(in_signature='sasu', **sbn)
+    def ActivateResult(self, id, terms, timestamp):
+        self.send_password_to_clipboard(id)
 
     @dbus.service.method(in_signature='as', out_signature='as', **sbn)
     def GetInitialResultSet(self, terms):
-        for term in terms:
-            print(term)
-        return []
+        return self.get_result_set(terms)
 
     @dbus.service.method(in_signature='as', out_signature='aa{sv}', **sbn)
     def GetResultMetas(self, ids):
-        print(ids)
-        return [dict(
-            id=id,
-            name=id.split(":")[0].split('/')[-1],
-        ) for id in ids]
+        return [dict(id=id, name=id,) for id in ids]
 
     @dbus.service.method(in_signature='asas', out_signature='as', **sbn)
     def GetSubsearchResultSet(self, previous_results, new_terms):
-        print(previous_results + new_terms)
-        return []
+        return self.get_result_set(new_terms)
+
+    @dbus.service.method(in_signature='asu', terms='as', timestamp='u', **sbn)
+    def LaunchSearch(self, terms, timestamp):
+        # FIXME: unstable
+        call(['qtpass'] + terms)
+
+    def get_result_set(self, terms):
+        names = []
+        for term in terms:
+            names += self.get_password_names(term)
+        return set(names)
+
+    def get_password_names(self, name):
+        names = []
+        for root, dirs, files in walk(self.password_store):
+            dir_path = root[len(self.password_store) + 1 :]
+            for file in files:
+                file_path = '{0}/{1}'.format(dir_path, file)
+                if re.match(r'.*{0}.*\.gpg$'.format(name),
+                           file_path,
+                           re.IGNORECASE):
+                    names.append(file_path[:-4])
+        return names
+
+    def send_password_to_clipboard(self, name):
+        call(['pass', 'show', '-c', name])
 
 def main():
     service = SearchPassService()
