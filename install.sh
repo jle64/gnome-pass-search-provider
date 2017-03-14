@@ -7,15 +7,14 @@ LIBDIR=${LIBDIR:-/usr/lib}
 LIBEXECDIR=${LIBEXECDIR:-/usr/lib/}
 SYSCONFDIR=${SYSCONFDIR:-/etc}
 
-install -Dm 0755 daemon.py "${LIBEXECDIR}"/gnome-shell-search-pass/daemon.py
+install -Dm 0755 gnome-pass-search-provider.py "${LIBEXECDIR}"/gnome-pass-search-provider/gnome-pass-search-provider.py
 
 # Search provider definition
-install -Dm 0644 conf/org.gnome.pass.search.ini "${DATADIR}"/gnome-shell/search-providers/org.gnome.pass.search.ini
+install -Dm 0644 conf/org.gnome.Pass.SearchProvider.ini "${DATADIR}"/gnome-shell/search-providers/org.gnome.Pass.SearchProvider.ini
 
 # Desktop file
-install -Dm 0644 conf/org.gnome.pass.search.desktop "${DATADIR}"/applications/org.gnome.pass.search.desktop
+install -Dm 0644 conf/org.gnome.Pass.SearchProvider.desktop "${DATADIR}"/applications/org.gnome.Pass.SearchProvider.desktop
 
 # DBus configuration
-install -Dm 0644 conf/org.gnome.pass.search.service.dbus "${DATADIR}"/dbus-1/services/org.gnome.pass.search.service
-install -Dm 0644 conf/org.gnome.pass.search.conf "${SYSCONFDIR}"/dbus-1/system.d/org.gnome.pass.search.conf
-install -Dm 0644 conf/org.gnome.pass.search.service.systemd "${LIBDIR}"/systemd/user/org.gnome.pass.search.service
+install -Dm 0644 conf/org.gnome.Pass.SearchProvider.service.dbus "${DATADIR}"/dbus-1/services/org.gnome.Pass.SearchProvider.service
+install -Dm 0644 conf/org.gnome.Pass.SearchProvider.service.systemd "${LIBDIR}"/systemd/user/org.gnome.Pass.SearchProvider.service

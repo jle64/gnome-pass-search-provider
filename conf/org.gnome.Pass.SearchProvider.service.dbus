@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.gnome.Pass.SearchProvider
+Exec=/usr/lib/gnome-pass-search-provider/gnome-pass-search-provider.py
+SystemdService=org.gnome.Pass.SearchProvider.service
