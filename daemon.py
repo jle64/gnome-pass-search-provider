@@ -26,7 +26,7 @@
 # Author: Luke Macken <lmacken@redhat.com>
 
 from subprocess import call
-from os import walk
+from os import walk, getenv
 from os.path import expanduser
 import re
 
@@ -62,7 +62,8 @@ class SearchPassService(dbus.service.Object):
         self.session_bus = dbus.SessionBus()
         bus_name = dbus.service.BusName(self.bus_name, bus=self.session_bus)
         dbus.service.Object.__init__(self, bus_name, self._object_path)
-        self.password_store = expanduser('~/.password-store')
+        self.password_store = getenv('PASSWORD_STORE_DIR') or \
+                              expanduser('~/.password-store')
 
     @dbus.service.method(in_signature='sasu', **sbn)
     def ActivateResult(self, id, terms, timestamp):
@@ -98,8 +99,8 @@ class SearchPassService(dbus.service.Object):
             for file in files:
                 file_path = '{0}/{1}'.format(dir_path, file)
                 if re.match(r'.*{0}.*\.gpg$'.format(name),
-                           file_path,
-                           re.IGNORECASE):
+                            file_path,
+                            re.IGNORECASE):
                     names.append(file_path[:-4])
         return names
 
