@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Categories=GNOME;Security;
+Icon=password-manager
+Name=Pass
+Comment=Gnome-shell search provider for pass
+Terminal=false
+Type=Application
+OnlyShowIn=GNOME;

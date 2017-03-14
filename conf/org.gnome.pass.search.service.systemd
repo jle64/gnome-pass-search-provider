@@ -1,0 +1,7 @@
+[Unit]
+Description=Pass search provider for gnome-shell daemon
+
+[Service]
+Type=dbus
+BusName=org.gnome.Pass.search
+ExecStart=/usr/lib/gnome-shell-search-pass/daemon.py

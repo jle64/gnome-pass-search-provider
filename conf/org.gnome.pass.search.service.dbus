@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.gnome.pass.search
+Exec=/usr/lib/gnome-shell-search-pass/daemon.py
+SystemdService=org.gnome.pass.search
