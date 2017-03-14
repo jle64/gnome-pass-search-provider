@@ -4,4 +4,4 @@
 * Find a good way of implementing LaunchSearch.
 * Make the daemon exit after some time.
 * Call into GPaste if present to mark item as password.
-
+* Change icon to one that is present in GNOME default theme.
