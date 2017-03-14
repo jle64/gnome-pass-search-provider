@@ -2,10 +2,10 @@
 set -eu -o pipefail
 cd "$(dirname "$(realpath "${0}")")"
 
-DATADIR='/usr/share'
-LIBDIR='/usr/lib'
-LIBEXECDIR='/usr/lib/'
-SYSCONFDIR='/etc'
+DATADIR=${DATADIR:-/usr/share}
+LIBDIR=${LIBDIR:-/usr/lib}
+LIBEXECDIR=${LIBEXECDIR:-/usr/lib/}
+SYSCONFDIR=${SYSCONFDIR:-/etc}
 
 install -Dm 0755 daemon.py "${LIBEXECDIR}"/gnome-shell-search-pass/daemon.py
 
