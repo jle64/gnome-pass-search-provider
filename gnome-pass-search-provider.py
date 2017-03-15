@@ -25,10 +25,10 @@
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Luke Macken <lmacken@redhat.com>
 
-from subprocess import call
+import subprocess
+import re
 from os import walk, getenv
 from os.path import expanduser
-import re
 
 from gi.repository import GLib
 
@@ -50,13 +50,8 @@ class SearchPassService(dbus.service.Object):
 
     """
     bus_name = 'org.gnome.Pass.SearchProvider'
-    enabled = False
-
-    _search_cache = {}
-    _request_cache = {}
 
     _object_path = '/' + bus_name.replace('.', '/')
-    __name__ = 'SearchPassService'
 
     def __init__(self):
         self.session_bus = dbus.SessionBus()
@@ -83,8 +78,7 @@ class SearchPassService(dbus.service.Object):
 
     @dbus.service.method(in_signature='asu', terms='as', timestamp='u', **sbn)
     def LaunchSearch(self, terms, timestamp):
-        # FIXME: unstable
-        call(['qtpass'] + terms)
+        pass
 
     def get_result_set(self, terms):
         names = []
@@ -105,7 +99,19 @@ class SearchPassService(dbus.service.Object):
         return names
 
     def send_password_to_clipboard(self, name):
-        call(['pass', 'show', '-c', name])
+        try:
+            pass_cmd = subprocess.run(['pass', 'show', name],
+                                      stdout=subprocess.PIPE)
+            password = re.sub(b'\n$', b'', pass_cmd.stdout)
+            if not pass_cmd.returncode:
+                session_bus = dbus.SessionBus()
+                gpaste_dbus = session_bus.get_object('org.gnome.GPaste.Daemon',
+                                                     '/org/gnome/GPaste')
+                gpaste_dbus.AddPassword(name,
+                                        password,
+                                        dbus_interface='org.gnome.GPaste1')
+        except dbus.DBusException:
+            subprocess.run(['pass', 'show', '-c', name])
 
 def main():
     service = SearchPassService()

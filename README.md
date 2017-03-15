@@ -11,10 +11,7 @@ Names of passwords will show up in GNOME Shell searches, choosing one will copy 
 
 ## Manual
 
-Ensure that python-gobject is installed on your system (probably already the case):
-```shell
-$PACKAGE_MANAGER install python-gobject
-```
+Ensure that python>=3.5 and python-gobject are installed on your system and that pass is setup.
 
 Download or clone this repository:
 ```shell
@@ -31,36 +28,28 @@ If you need to you can change the installation paths to suit your system:
 sudo SYSCONFDIR=/etc DATADIR=/usr/share LIBDIR=/usr/lib LIBEXECDIR=/usr/lib ./install.sh
 ```
 
+Recommended : set gpg agent to use pinentry-gnome3 by adding `pinentry-program /usr/bin/pinentry-gnome3` to `~/.gnupg/.gpg-agent.conf`.
+
 Close and reopen your GNOME session or (if not on Wayland) just restart the Shell (alt + f2, r).
-The search provider should show up and be enabled in Gnome search preferences and be autoloaded by GNOME Shell.
+The search provider should show up and be enabled in GNOME search preferences and started on demand by GNOME Shell.
 
 # Environment variables
 
-If you are configuring pass through environment variables, such as `PASSWORD_STORE_DIR`, make sure to set them in a way that will propagate to the search provider executable.
-If you are on a systemd-based system, you can set them in the unit file :
+If you are configuring pass through environment variables, such as `PASSWORD_STORE_DIR`, make sure to set them in a way that will propagate to the search provider executable, not just in your shell.
+Setting them in `~/.profile` should be sufficient.
 
-```shell
-systemctl --user edit org.gnome.Pass.SearchProvider.service
-```
+# Clipboard managers
 
-Add your variables like this :
-```ini
-[Service]
-Environment=PASSWORD_STORE_DIR=/my/passwords/path
-```
-Then restart the service :
-
-```shell
-systemctl --user restart org.gnome.Pass.SearchProvider.service
-```
+If you are using GPaste, passwords will be sent to it marked as passwords, thus ensuring they are not visible.
+Otherwise they are sent to the clipboard using `pass -c` which defaults to expiration after 45 seconds.
 
 # Compatibility
 
 This implements the `org.gnome.Shell.SearchProvider2` D-Bus API.
-I'm not sure since when this has been in Gnome nor until when it will stay.
-This works fine on Gnome 3.22 and I expect it will continue to work for some time with ulterior versions.
+I'm not sure since when this has been in GNOME nor until when it will stay.
+This works fine on GNOME 3.22 and I expect it will continue to work for some time with ulterior versions.
 
 # Troubleshooting
 
-If this does not work for you, make sure to look to wherever Gnome and D-Bus are logging for error messages (in the journal on systemd-using systems).
-
+If this does not work for you, make sure to look to wherever GNOME and D-Bus are logging for error messages (in the journal on systemd-using systems).
+Don't hesitate to open an issue.
