@@ -7,6 +7,10 @@ Names of passwords will show up in GNOME Shell searches, choosing one will copy 
 # Installation
 ## Packages
 
+### Arch Linux
+Install `gnome-pass-search-provider-git` from the AUR.
+
+### Others
 *TODO*
 
 ## Manual
@@ -27,6 +31,8 @@ If you need to you can change the installation paths to suit your system:
 ```shell
 sudo SYSCONFDIR=/etc DATADIR=/usr/share LIBDIR=/usr/lib LIBEXECDIR=/usr/lib ./install.sh
 ```
+
+# Post-installation
 
 Recommended : set gpg agent to use pinentry-gnome3 by adding `pinentry-program /usr/bin/pinentry-gnome3` to `~/.gnupg/.gpg-agent.conf`.
 
