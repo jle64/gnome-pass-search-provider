@@ -18,10 +18,10 @@
 # Copyright (C) 2017 Jonathan Lestrelin
 # Author: Jonathan Lestrelin <jonathan.lestrelin@gmail.com>
 
-# This project was based gnome-shell-search-github-repositories
-# which itself was based fedmsg-notify
+# This project was based on gnome-shell-search-github-repositories
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Ralph Bean <rbean@redhat.com>
+# which itself was based on fedmsg-notify
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Luke Macken <lmacken@redhat.com>
 
