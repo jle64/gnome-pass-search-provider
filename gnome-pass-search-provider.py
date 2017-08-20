@@ -25,16 +25,16 @@
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Luke Macken <lmacken@redhat.com>
 
-import subprocess
-import re
-from os import walk, getenv
+from os import getenv
+from os import walk
 from os.path import expanduser
-
-from gi.repository import GLib
+import re
+import subprocess
 
 import dbus
 import dbus.glib
 import dbus.service
+from gi.repository import GLib
 
 # Convenience shorthand for declaring dbus interface methods.
 # s.b.n. -> search_bus_name
@@ -58,7 +58,7 @@ class SearchPassService(dbus.service.Object):
         bus_name = dbus.service.BusName(self.bus_name, bus=self.session_bus)
         dbus.service.Object.__init__(self, bus_name, self._object_path)
         self.password_store = getenv('PASSWORD_STORE_DIR') or \
-                              expanduser('~/.password-store')
+            expanduser('~/.password-store')
 
     @dbus.service.method(in_signature='sasu', **sbn)
     def ActivateResult(self, id, terms, timestamp):
@@ -89,7 +89,7 @@ class SearchPassService(dbus.service.Object):
     def get_password_names(self, name):
         names = []
         for root, dirs, files in walk(self.password_store):
-            dir_path = root[len(self.password_store) + 1 :]
+            dir_path = root[len(self.password_store) + 1:]
             for file in files:
                 file_path = '{0}/{1}'.format(dir_path, file)
                 if re.match(r'.*{0}.*\.gpg$'.format(name),
@@ -113,10 +113,11 @@ class SearchPassService(dbus.service.Object):
         except dbus.DBusException:
             subprocess.run(['pass', 'show', '-c', name])
 
+
 def main():
-    service = SearchPassService()
-    loop = GLib.MainLoop()
-    loop.run()
+    SearchPassService()
+    GLib.MainLoop().run()
+
 
 if __name__ == '__main__':
     main()
