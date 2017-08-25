@@ -98,20 +98,64 @@ class SearchPassService(dbus.service.Object):
                     names.append(file_path[:-4])
         return names
 
+    def send_password_to_gpaste(self, name):
+        pass_cmd = subprocess.run(
+            ['pass', 'show', name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        password = re.sub(b'\n$', b'', pass_cmd.stdout)
+        error = re.sub(b'\n$', b'', pass_cmd.stderr)
+        if not pass_cmd.returncode:
+            self.session_bus.get_object(
+                'org.gnome.GPaste.Daemon',
+                '/org/gnome/GPaste'
+            ).AddPassword(
+                name,
+                password,
+                dbus_interface='org.gnome.GPaste1'
+            )
+            self.notify('Password {} copied to clipboard.'.format(name))
+        else:
+            self.notify('Failed to copy password', body=error, error=True)
+
+    def send_password_to_native_clipboard(self, name):
+        pass_cmd = subprocess.run(
+            ['pass', 'show', '-c', name],
+            stderr=subprocess.PIPE
+        )
+        error = re.sub(b'\n$', b'', pass_cmd.stderr)
+        if pass_cmd.returncode:
+            self.notify('Failed to copy password', body=error, error=True)
+        else:
+            self.notify('Password {} copied to clipboard.'.format(name))
+
     def send_password_to_clipboard(self, name):
         try:
-            pass_cmd = subprocess.run(['pass', 'show', name],
-                                      stdout=subprocess.PIPE)
-            password = re.sub(b'\n$', b'', pass_cmd.stdout)
-            if not pass_cmd.returncode:
-                session_bus = dbus.SessionBus()
-                gpaste_dbus = session_bus.get_object('org.gnome.GPaste.Daemon',
-                                                     '/org/gnome/GPaste')
-                gpaste_dbus.AddPassword(name,
-                                        password,
-                                        dbus_interface='org.gnome.GPaste1')
+            self.send_password_to_gpaste(name)
         except dbus.DBusException:
-            subprocess.run(['pass', 'show', '-c', name])
+            # We couldn't join GPaste over D-Bus,
+            # use pass native clipboard copy
+            self.send_password_to_native_clipboard(name)
+
+    def notify(self, message, body='', error=False):
+        try:
+            self.session_bus.get_object(
+                'org.freedesktop.Notifications',
+                '/org/freedesktop/Notifications'
+            ).Notify(
+                'Pass',
+                0,
+                '',
+                message,
+                body,
+                '',
+                '',
+                0 if error else 3000,
+                dbus_interface='org.freedesktop.Notifications'
+            )
+        except dbus.DBusException as err:
+            print('Got error {} while trying to display message {}.'.format(err, message))
 
 
 def main():
