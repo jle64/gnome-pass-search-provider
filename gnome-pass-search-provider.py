@@ -150,12 +150,13 @@ class SearchPassService(dbus.service.Object):
                 message,
                 body,
                 '',
-                '',
+                {'transient': False if error else True},
                 0 if error else 3000,
                 dbus_interface='org.freedesktop.Notifications'
             )
         except dbus.DBusException as err:
-            print('Got error {} while trying to display message {}.'.format(err, message))
+            print('Got error {} while trying to display message {}.'.format(
+                err, message))
 
 
 def main():
