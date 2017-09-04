@@ -97,7 +97,7 @@ class SearchPassService(dbus.service.Object):
                 matcher.set_seq1(path[:-4])
                 score = matcher.ratio()
 
-                if score >= 0.5:
+                if score > 0.0:
                     matches.append((score, path[:-4]))
 
         return [x[1] for x in sorted(matches, key=lambda x: x[0], reverse=True)]
