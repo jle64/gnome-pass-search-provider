@@ -25,11 +25,12 @@
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Luke Macken <lmacken@redhat.com>
 
+import difflib
 from os import getenv
 from os import walk
-from os.path import expanduser, join as path_join
+from os.path import expanduser
+from os.path import join as path_join
 import re
-import difflib
 import subprocess
 
 import dbus
@@ -84,7 +85,7 @@ class SearchPassService(dbus.service.Object):
     def get_result_set(self, terms):
         name = ' '.join(terms)
         matcher = difflib.SequenceMatcher(b=name, autojunk=False)
-        matches = []
+        matches = {}
 
         for root, dirs, files in walk(self.password_store):
             dir_path = root[len(self.password_store) + 1:]
@@ -93,14 +94,15 @@ class SearchPassService(dbus.service.Object):
                 continue
 
             for filename in files:
-                path = path_join(dir_path, filename)
-                matcher.set_seq1(path[:-4])
-                score = matcher.ratio()
+                path = path_join(dir_path, filename)[:-4]
+                for name in path.split('/'):
+                    matcher.set_seq1(name)
+                    score = matcher.ratio()
 
-                if score >= 0.5:
-                    matches.append((score, path[:-4]))
+                    if score >= 0.5 and (path not in matches or score > matches[path]):
+                        matches[path] = score
 
-        return [x[1] for x in sorted(matches, key=lambda x: x[0], reverse=True)]
+        return sorted(matches, key=matches.__getitem__, reverse=True)
 
     def send_password_to_gpaste(self, name):
         pass_cmd = subprocess.run(
