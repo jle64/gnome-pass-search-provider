@@ -126,13 +126,10 @@ class SearchPassService(dbus.service.Object):
             self.notify('Failed to copy password', body=error, error=True)
 
     def send_password_to_native_clipboard(self, name):
-        pass_cmd = subprocess.run(
-            ['pass', 'show', '-c', name],
-            stderr=subprocess.PIPE
-        )
-        error = re.sub(b'\n$', b'', pass_cmd.stderr)
+        pass_cmd = subprocess.run(['pass', 'show', '-c', name])
+
         if pass_cmd.returncode:
-            self.notify('Failed to copy password', body=error, error=True)
+            self.notify('Failed to copy password!', error=True)
         else:
             self.notify('Password {} copied to clipboard.'.format(name))
 
