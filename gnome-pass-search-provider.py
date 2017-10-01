@@ -6,13 +6,13 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# gnome-pass-search-providers is distributed in the hope that it will be useful,
+# gnome-pass-search-provider is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with search-pass.  If not, see
+# along with gnome-pass-search-provider. If not, see
 # <http://www.gnu.org/licenses/>.
 
 # Copyright (C) 2017 Jonathan Lestrelin
@@ -94,12 +94,14 @@ class SearchPassService(dbus.service.Object):
                 continue
 
             for filename in files:
+                if filename[-4:] != '.gpg':
+                    continue
                 path = path_join(dir_path, filename)[:-4]
                 for name in path.split('/'):
                     matcher.set_seq1(name)
                     score = matcher.ratio()
-
-                    if score >= 0.5 and (path not in matches or score > matches[path]):
+                    if score >= 0.5 and \
+                            (path not in matches or score > matches[path]):
                         matches[path] = score
 
         return sorted(matches, key=matches.__getitem__, reverse=True)
