@@ -5,13 +5,8 @@ Names of passwords will show up in GNOME Shell searches, choosing one will copy 
 ![Sreencapture](misc/screencapture.gif)
 
 # Installation
-## Packages
-
-### Arch Linux
+## Arch Linux
 Install `gnome-pass-search-provider-git` from the AUR.
-
-### Others
-*TODO*
 
 ## Manual
 
@@ -36,7 +31,9 @@ sudo SYSCONFDIR=/etc DATADIR=/usr/share LIBDIR=/usr/lib LIBEXECDIR=/usr/lib ./in
 
 Recommended : set gpg agent to use pinentry-gnome3 by adding `pinentry-program /usr/bin/pinentry-gnome3` to `~/.gnupg/.gpg-agent.conf`.
 
-Close and reopen your GNOME session or (if not on Wayland) just restart the Shell (alt + f2, r).
+If you are on Xorg, restart GNOME Shell by typing 'alt + f2' then entering 'r' as command.
+If you are on Wayland, you need to close and reopen your GNOME session.
+
 The search provider should show up and be enabled in GNOME search preferences and started on demand by GNOME Shell.
 
 # Environment variables
@@ -51,9 +48,7 @@ Otherwise they are sent to the clipboard using `pass -c` which defaults to expir
 
 # Compatibility
 
-This implements the `org.gnome.Shell.SearchProvider2` D-Bus API.
-I'm not sure since when this has been in GNOME nor until when it will stay.
-This works fine on GNOME 3.22 and I expect it will continue to work for some time with ulterior versions.
+This implements the `org.gnome.Shell.SearchProvider2` D-Bus API which seems to be present in GNOME Shell since around 2012 and has been tested with GNOME Shell 3.22-3.26.
 
 # Troubleshooting
 
