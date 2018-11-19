@@ -6,6 +6,9 @@ DATADIR=${DATADIR:-/usr/share}
 LIBDIR=${LIBDIR:-/usr/lib}
 LIBEXECDIR=${LIBEXECDIR:-/usr/lib/}
 SYSCONFDIR=${SYSCONFDIR:-/etc}
+PIPARGS=${PIPARGS:-} # use --user for local install
+
+pip install ${PIPARGS} fuzzywuzzy
 
 install -Dm 0755 gnome-pass-search-provider.py "${LIBEXECDIR}"/gnome-pass-search-provider/gnome-pass-search-provider.py
 
