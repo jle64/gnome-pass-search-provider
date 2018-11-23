@@ -25,7 +25,7 @@
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Luke Macken <lmacken@redhat.com>
 
-from fuzzywuzzy import process
+from fuzzywuzzy import process, fuzz
 from os import getenv
 from os import walk
 from os.path import expanduser
@@ -98,7 +98,10 @@ class SearchPassService(dbus.service.Object):
                 path = path_join(dir_path, filename)[:-4]
                 password_list.append(path)
 
-        return [entry[0] for entry in process.extract(name, password_list, limit=5)]
+        return [entry[0] for entry in process.extract(name,
+                                                      password_list,
+                                                      scorer=fuzz.partial_ratio,
+                                                      limit=5)]
 
     def send_password_to_gpaste(self, name):
         pass_cmd = subprocess.run(
