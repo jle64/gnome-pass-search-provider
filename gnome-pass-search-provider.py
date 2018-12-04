@@ -25,7 +25,7 @@
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Luke Macken <lmacken@redhat.com>
 
-import difflib
+from fuzzywuzzy import process, fuzz
 from os import getenv
 from os import walk
 from os.path import expanduser
@@ -83,9 +83,8 @@ class SearchPassService(dbus.service.Object):
         pass
 
     def get_result_set(self, terms):
-        name = ' '.join(terms)
-        matcher = difflib.SequenceMatcher(b=name, autojunk=False)
-        matches = {}
+        name = ''.join(terms)
+        password_list = []
 
         for root, dirs, files in walk(self.password_store):
             dir_path = root[len(self.password_store) + 1:]
@@ -97,18 +96,12 @@ class SearchPassService(dbus.service.Object):
                 if filename[-4:] != '.gpg':
                     continue
                 path = path_join(dir_path, filename)[:-4]
-                for part in path.split('/'):
-                    # smartcase: be case insensitive unless uppercase
-                    # characters are used in the search
-                    if name.islower():
-                        part = part.lower()
-                    matcher.set_seq1(part)
-                    score = matcher.ratio()
-                    if score >= 0.5 and \
-                            (path not in matches or score > matches[path]):
-                        matches[path] = score
+                password_list.append(path)
 
-        return sorted(matches, key=matches.__getitem__, reverse=True)
+        return [entry[0] for entry in process.extract(name,
+                                                      password_list,
+                                                      scorer=fuzz.partial_ratio,
+                                                      limit=5)]
 
     def send_password_to_gpaste(self, name):
         pass_cmd = subprocess.run(
