@@ -120,7 +120,7 @@ class SearchPassService(dbus.service.Object):
                 password,
                 dbus_interface='org.gnome.GPaste1'
             )
-            self.notify('Password {} copied to clipboard.'.format(name))
+            self.notify('Copied password to clipboard:', body='<b>{}</b>'.format(name))
         else:
             self.notify('Failed to copy password', body=error, error=True)
 
@@ -130,7 +130,7 @@ class SearchPassService(dbus.service.Object):
         if pass_cmd.returncode:
             self.notify('Failed to copy password!', error=True)
         else:
-            self.notify('Password {} copied to clipboard.'.format(name))
+            self.notify('Copied password to clipboard:', body='<b>{}</b>'.format(name))
 
     def send_password_to_clipboard(self, name):
         try:
@@ -148,7 +148,7 @@ class SearchPassService(dbus.service.Object):
             ).Notify(
                 'Pass',
                 0,
-                '',
+                'dialog-password',
                 message,
                 body,
                 '',
