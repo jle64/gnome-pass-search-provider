@@ -83,6 +83,12 @@ class SearchPassService(dbus.service.Object):
         pass
 
     def get_result_set(self, terms):
+        if terms[0] == 'otp':
+            otp = True
+            terms = terms[1:]
+        else:
+            otp = False
+
         name = ''.join(terms)
         password_list = []
 
@@ -98,17 +104,15 @@ class SearchPassService(dbus.service.Object):
                 path = path_join(dir_path, filename)[:-4]
                 password_list.append(path)
 
-        return [entry[0] for entry in process.extract(name,
-                                                      password_list,
-                                                      scorer=fuzz.partial_ratio,
-                                                      limit=5)]
+        results = [e[0] for e in process.extract(name, password_list, limit=5,
+                                                 scorer=fuzz.partial_ratio)]
+        if otp:
+            results = [f'otp {r}' for r in results]
+        return results
 
-    def send_password_to_gpaste(self, name):
-        pass_cmd = subprocess.run(
-            ['pass', 'show', name],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+    def send_password_to_gpaste(self, base_args, name):
+        pass_cmd = subprocess.run(base_args + [name], stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
         password = re.sub(b'\n$', b'', pass_cmd.stdout)
         error = re.sub(b'\n$', b'', pass_cmd.stderr)
         if not pass_cmd.returncode:
@@ -120,25 +124,35 @@ class SearchPassService(dbus.service.Object):
                 password,
                 dbus_interface='org.gnome.GPaste1'
             )
-            self.notify('Password {} copied to clipboard.'.format(name))
+            if 'otp' in base_args:
+                self.notify(f'OTP password {name} copied to clipboard.')
+            else:
+                self.notify(f'Password {name} copied to clipboard.')
         else:
             self.notify('Failed to copy password', body=error, error=True)
 
-    def send_password_to_native_clipboard(self, name):
-        pass_cmd = subprocess.run(['pass', 'show', '-c', name])
-
+    def send_password_to_native_clipboard(self, base_args, name):
+        pass_cmd = subprocess.run(base_args + ['-c', name])
         if pass_cmd.returncode:
             self.notify('Failed to copy password!', error=True)
+        elif 'otp' in base_args:
+            self.notify(f'OTP password {name} copied to clipboard.')
         else:
-            self.notify('Password {} copied to clipboard.'.format(name))
+            self.notify(f'Password {name} copied to clipboard.')
 
     def send_password_to_clipboard(self, name):
+        if name.startswith('otp '):
+            base_args = ['pass', 'otp', 'code']
+            name = name[4:]
+        else:
+            base_args = ['pass', 'show']
+
         try:
-            self.send_password_to_gpaste(name)
+            self.send_password_to_gpaste(base_args, name)
         except dbus.DBusException:
             # We couldn't join GPaste over D-Bus,
             # use pass native clipboard copy
-            self.send_password_to_native_clipboard(name)
+            self.send_password_to_native_clipboard(base_args, name)
 
     def notify(self, message, body='', error=False):
         try:
