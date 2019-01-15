@@ -29,7 +29,7 @@ sudo SYSCONFDIR=/etc DATADIR=/usr/share LIBDIR=/usr/lib LIBEXECDIR=/usr/lib ./in
 
 # Post-installation
 
-Recommended : set gpg agent to use pinentry-gnome3 by adding `pinentry-program /usr/bin/pinentry-gnome3` to `~/.gnupg/.gpg-agent.conf`.
+Recommended : set gpg agent to use pinentry-gnome3 by adding `pinentry-program /usr/bin/pinentry-gnome3` to `~/.gnupg/gpg-agent.conf`.
 
 If you are on Xorg, restart GNOME Shell by typing 'alt + f2' then entering 'r' as command.
 If you are on Wayland, you need to close and reopen your GNOME session.
@@ -48,7 +48,7 @@ Otherwise they are sent to the clipboard using `pass -c` which defaults to expir
 
 # Compatibility
 
-This implements the `org.gnome.Shell.SearchProvider2` D-Bus API which seems to be present in GNOME Shell since around 2012 and has been tested with GNOME Shell 3.22-3.26.
+This implements the `org.gnome.Shell.SearchProvider2` D-Bus API which seems to be present in GNOME Shell since around 2012 and has been tested with GNOME Shell 3.22-3.30.
 
 # Troubleshooting
 
