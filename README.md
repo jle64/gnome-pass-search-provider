@@ -4,6 +4,11 @@ Names of passwords will show up in GNOME Shell searches, choosing one will copy 
 
 ![Sreencapture](misc/screencapture.gif)
 
+## [pass-otp](https://github.com/tadfisher/pass-otp)
+
+Supports the pass-otp extension. Searches starting with ```otp``` will copy otp token to clipboard.
+
+
 # Installation
 ## Arch Linux
 Install `gnome-pass-search-provider-git` from the AUR.
