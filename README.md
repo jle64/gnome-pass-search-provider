@@ -48,7 +48,7 @@ Otherwise they are sent to the clipboard using `pass -c` which defaults to expir
 
 # Compatibility
 
-This implements the `org.gnome.Shell.SearchProvider2` D-Bus API which seems to be present in GNOME Shell since around 2012 and has been tested with GNOME Shell 3.22-3.26.
+This implements the `org.gnome.Shell.SearchProvider2` D-Bus API which seems to be present in GNOME Shell since around 2012 and has been tested with GNOME Shell 3.22-3.30.
 
 # Troubleshooting
 
