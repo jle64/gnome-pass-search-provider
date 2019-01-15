@@ -72,7 +72,7 @@ class SearchPassService(dbus.service.Object):
 
     @dbus.service.method(in_signature='as', out_signature='aa{sv}', **sbn)
     def GetResultMetas(self, ids):
-        return [dict(id=id, name=id,) for id in ids]
+        return [dict(id=id, name=id, gicon="password-manager") for id in ids]
 
     @dbus.service.method(in_signature='asas', out_signature='as', **sbn)
     def GetSubsearchResultSet(self, previous_results, new_terms):
@@ -104,14 +104,14 @@ class SearchPassService(dbus.service.Object):
                                                       limit=5)]
 
     def send_password_to_gpaste(self, name):
-        pass_cmd = subprocess.run(
-            ['pass', 'show', name],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        password = re.sub(b'\n$', b'', pass_cmd.stdout)
-        error = re.sub(b'\n$', b'', pass_cmd.stderr)
-        if not pass_cmd.returncode:
+        try:
+            pass_output = subprocess.check_output(
+                ['pass', 'show', name],
+                stderr=subprocess.STDOUT,
+                text=True
+            )
+            password = pass_output.split('\n', 1)[0]
+
             self.session_bus.get_object(
                 'org.gnome.GPaste.Daemon',
                 '/org/gnome/GPaste'
@@ -121,8 +121,9 @@ class SearchPassService(dbus.service.Object):
                 dbus_interface='org.gnome.GPaste1'
             )
             self.notify('Copied password to clipboard:', body='<b>{}</b>'.format(name))
-        else:
-            self.notify('Failed to copy password', body=error, error=True)
+
+        except subprocess.CalledProcessError as error:
+            self.notify('Failed to copy password!', body=error.output, error=True)
 
     def send_password_to_native_clipboard(self, name):
         pass_cmd = subprocess.run(['pass', 'show', '-c', name])

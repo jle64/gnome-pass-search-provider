@@ -29,7 +29,7 @@ sudo SYSCONFDIR=/etc DATADIR=/usr/share LIBDIR=/usr/lib LIBEXECDIR=/usr/lib ./in
 
 # Post-installation
 
-Recommended : set gpg agent to use pinentry-gnome3 by adding `pinentry-program /usr/bin/pinentry-gnome3` to `~/.gnupg/.gpg-agent.conf`.
+Recommended : set gpg agent to use pinentry-gnome3 by adding `pinentry-program /usr/bin/pinentry-gnome3` to `~/.gnupg/gpg-agent.conf`.
 
 If you are on Xorg, restart GNOME Shell by typing 'alt + f2' then entering 'r' as command.
 If you are on Wayland, you need to close and reopen your GNOME session.
