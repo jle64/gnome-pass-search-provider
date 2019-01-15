@@ -72,7 +72,7 @@ class SearchPassService(dbus.service.Object):
 
     @dbus.service.method(in_signature='as', out_signature='aa{sv}', **sbn)
     def GetResultMetas(self, ids):
-        return [dict(id=id, name=id,) for id in ids]
+        return [dict(id=id, name=id, gicon="password-manager") for id in ids]
 
     @dbus.service.method(in_signature='asas', out_signature='as', **sbn)
     def GetSubsearchResultSet(self, previous_results, new_terms):
