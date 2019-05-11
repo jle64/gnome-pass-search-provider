@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
 Categories=GNOME;Security;
-Icon=password-manager
+Icon=dialog-password
 Name=Pass
 Comment=GNOME Shell search provider for pass
 Terminal=false

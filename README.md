@@ -1,4 +1,4 @@
-A search provider for GNOME Shell that adds support for searching in [pass](https://www.passwordstore.org/).
+A search provider for GNOME Shell that adds support for searching in zx2c4/[pass](https://www.passwordstore.org/).
 
 Names of passwords will show up in GNOME Shell searches, choosing one will copy the corresponding content to the clipboard.
 
@@ -12,6 +12,12 @@ Install `gnome-pass-search-provider-git` from the AUR.
 
 Ensure that python>=3.5 and python-gobject are installed on your system and that pass is setup.
 
+Install Python 3 fuzzywuzzy module.
+Depending on your distribution this can be packaged as python-fuzzywuzzy, python3-fuzzywuzzy or you might need to install it with pip:
+```shell
+python3 -m pip install fuzzywuzzy
+```
+
 Download or clone this repository:
 ```shell
 git clone git@github.com:jle64/gnome-shell-pass-search-provider.git
@@ -20,11 +26,6 @@ git clone git@github.com:jle64/gnome-shell-pass-search-provider.git
 Run the installation script as root:
 ```shell
 sudo ./install.sh
-```
-
-If you need to you can change the installation paths to suit your system:
-```shell
-sudo SYSCONFDIR=/etc DATADIR=/usr/share LIBDIR=/usr/lib LIBEXECDIR=/usr/lib ./install.sh
 ```
 
 # Post-installation
@@ -43,7 +44,12 @@ The [pass-otp](https://github.com/tadfisher/pass-otp) extension is supported. Se
 # Environment variables
 
 If you are configuring pass through environment variables, such as `PASSWORD_STORE_DIR`, make sure to set them in a way that will propagate to the search provider executable, not just in your shell.
-Setting them in `~/.profile` should be sufficient.
+Setting them in `~/.profile` or `~/.pam_environment` should be sufficient, but stuff in shell-specific files such as `~/.bashrc` and co will not be picked up by gnome-shell.
+
+If your values have no effect, make sure they propagate to the script environment:
+```shell
+ps auxeww | grep [g]nome-pass-search-provider.py
+```
 
 # Clipboard managers
 
@@ -52,9 +58,9 @@ Otherwise they are sent to the clipboard using `pass -c` which defaults to expir
 
 # Compatibility
 
-This implements the `org.gnome.Shell.SearchProvider2` D-Bus API which seems to be present in GNOME Shell since around 2012 and has been tested with GNOME Shell 3.22-3.30.
+This implements the `org.gnome.Shell.SearchProvider2` D-Bus API and has been tested with GNOME Shell 3.22-3.32.
 
 # Troubleshooting
 
-If this does not work for you, make sure to look to wherever GNOME and D-Bus are logging for error messages (in the journal on systemd-using systems).
+If this does not work for you, make sure to look to wherever GNOME and D-Bus are logging for error messages (using `journalctl --user` on systemd-using systems).
 Don't hesitate to open an issue.
