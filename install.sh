@@ -2,8 +2,8 @@
 set -eu -o pipefail
 cd "$(dirname "$(realpath "${0}")")"
 
-DATADIR=/usr/share
-LIBDIR=/usr/lib
+DATADIR=${DATADIR:-/usr/share}
+LIBDIR=${LIBDIR:-/usr/lib}
 
 # The actual executable
 install -Dm 0755 gnome-pass-search-provider.py "${LIBDIR}"/gnome-pass-search-provider/gnome-pass-search-provider.py
