@@ -43,7 +43,7 @@ The [pass-otp](https://github.com/tadfisher/pass-otp) extension is supported. Se
 
 # Fields
 
-To copy other values than the password in the first line from a pass file, start the search with `:NAME search...`. This requieres `GPaste`.
+To copy other values than the password in the first line from a pass file, start the search with `:NAME search...`. The field name must be a full but case insensitive match. This requires `GPaste`.
 
 For example with a pass file like:
 ```

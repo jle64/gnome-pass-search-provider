@@ -25,16 +25,17 @@
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Luke Macken <lmacken@redhat.com>
 
-from fuzzywuzzy import process, fuzz
-from gi.repository import GLib
-from os import getenv, walk
-from os.path import expanduser, join as path_join
-
 import dbus
 import dbus.glib
 import dbus.service
 import re
 import subprocess
+
+from os import getenv, walk
+from os.path import expanduser, join as path_join
+
+from gi.repository import GLib
+from fuzzywuzzy import process, fuzz
 
 # Convenience shorthand for declaring dbus interface methods.
 # s.b.n. -> search_bus_name
@@ -122,8 +123,8 @@ class SearchPassService(dbus.service.Object):
                 if match:
                     password = match.group('value')
                 else:
-                    raise RuntimeError(f'The field {field} not found in pass' +
-                                       ' file.')
+                    raise RuntimeError(f'The field {field} was not found in ' +
+                                       'the pass file.')
             else:
                 password = output.split('\n', 1)[0]
 
