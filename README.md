@@ -41,6 +41,19 @@ The search provider should show up and be enabled in GNOME search preferences an
 
 The [pass-otp](https://github.com/tadfisher/pass-otp) extension is supported. Searches starting with `otp` will copy the otp token to the clipboard.
 
+# Fields
+
+To copy other values than the password in the first line from a pass file, start the search with `:NAME search...`. The field name must be a full but case insensitive match. This requires `GPaste`.
+
+For example with a pass file like:
+```
+SUPERSECRETPASSWORD
+user: username
+pin: 123456
+```
+
+To copy the pin start the search with `:pin` and for the username `:user`.
+
 # Environment variables
 
 If you are configuring pass through environment variables, such as `PASSWORD_STORE_DIR`, make sure to set them in a way that will propagate to the search provider executable, not just in your shell.
