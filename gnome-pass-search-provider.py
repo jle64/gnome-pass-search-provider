@@ -114,6 +114,9 @@ class SearchPassService(dbus.service.Object):
 
     def send_password_to_gpaste(self, base_args, name, field=None):
         try:
+            gpaste = self.session_bus.get_object('org.gnome.GPaste.Daemon',
+                                                 '/org/gnome/GPaste')
+
             output = subprocess.check_output(base_args + [name],
                                              stderr=subprocess.STDOUT,
                                              universal_newlines=True)
@@ -128,14 +131,8 @@ class SearchPassService(dbus.service.Object):
             else:
                 password = output.split('\n', 1)[0]
 
-            self.session_bus.get_object(
-                'org.gnome.GPaste.Daemon',
-                '/org/gnome/GPaste'
-            ).AddPassword(
-                name,
-                password,
-                dbus_interface='org.gnome.GPaste1'
-            )
+            gpaste.AddPassword(name, password,
+                               dbus_interface='org.gnome.GPaste1')
 
             if 'otp' in base_args:
                 self.notify('Copied OTP password to clipboard:',
