@@ -26,16 +26,15 @@
 # Author: Luke Macken <lmacken@redhat.com>
 
 import dbus
-import dbus.glib
 import dbus.service
 import re
 import subprocess
 
+from dbus.mainloop.glib import DBusGMainLoop
+from fuzzywuzzy import process, fuzz
+from gi.repository import GLib
 from os import getenv, walk
 from os.path import expanduser, join as path_join
-
-from gi.repository import GLib
-from fuzzywuzzy import process, fuzz
 
 # Convenience shorthand for declaring dbus interface methods.
 # s.b.n. -> search_bus_name
@@ -122,7 +121,7 @@ class SearchPassService(dbus.service.Object):
                                              universal_newlines=True)
             if field is not None:
                 match = re.search(fr'^{field}:\s*(?P<value>.+?)$', output,
-                                  flags=re.I|re.M)
+                                  flags=re.I | re.M)
                 if match:
                     password = match.group('value')
                 else:
@@ -198,14 +197,10 @@ class SearchPassService(dbus.service.Object):
                 dbus_interface='org.freedesktop.Notifications'
             )
         except dbus.DBusException as err:
-            print('Got error {} while trying to display message {}.'.format(
-                err, message))
-
-
-def main():
-    SearchPassService()
-    GLib.MainLoop().run()
+            print(f'Error {err} while trying to display {message}.')
 
 
 if __name__ == '__main__':
-    main()
+    DBusGMainLoop(set_as_default=True)
+    SearchPassService()
+    GLib.MainLoop().run()
