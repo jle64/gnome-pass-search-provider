@@ -8,6 +8,9 @@ Names of passwords will show up in GNOME Shell searches, choosing one will copy 
 ## Arch Linux
 Install `gnome-pass-search-provider-git` from the AUR.
 
+## Debian (buster-backports and later)
+Install `gnome-pass-search-provider` through APT.
+
 ## Manual
 
 Ensure that python>=3.5 and python-gobject are installed on your system and that pass is setup.
