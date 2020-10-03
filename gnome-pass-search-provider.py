@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # This file is a part of gnome-pass-search-provider.
 #
 # gnome-pass-search-provider is free software: you can redistribute it and/or modify
@@ -43,7 +43,7 @@ sbn = dict(dbus_interface=search_bus_name)
 
 
 class SearchPassService(dbus.service.Object):
-    """ The pass search daemon.
+    """The pass search daemon.
 
     This service is started through DBus activation by calling the
     :meth:`Enable` method, and stopped with :meth:`Disable`.
@@ -144,8 +144,10 @@ class SearchPassService(dbus.service.Object):
                     )
             else:
                 password = output.split("\n", 1)[0]
-
-            gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste1")
+            try:
+                gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste1")
+            except dbus.DBusException:
+                gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste2")
 
             if "otp" in base_args:
                 self.notify("Copied OTP password to clipboard:", body=f"<b>{name}</b>")

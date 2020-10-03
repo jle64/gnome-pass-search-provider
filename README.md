@@ -2,6 +2,8 @@ A search provider for GNOME Shell that adds support for searching in zx2c4/[pass
 
 Names of passwords will show up in GNOME Shell searches, choosing one will copy the corresponding content to the clipboard.
 
+Supports OTP, fields and can use GPaste.
+
 ![Sreencapture](misc/screencapture.gif)
 
 # Installation
@@ -10,34 +12,21 @@ Install `gnome-pass-search-provider-git` from the AUR.
 
 ## Manual
 
-Ensure that python>=3.5 and python-gobject are installed on your system and that pass is setup.
+Ensure that python>=3.5 as well as the dbus, gobject, fuzzywuzzy modules are installed. They should all be packaged under python-name or python3-name depending on your distribution.
 
-Install Python 3 fuzzywuzzy module.
-Depending on your distribution this can be packaged as python-fuzzywuzzy, python3-fuzzywuzzy or you might need to install it with pip:
-```shell
-python3 -m pip install fuzzywuzzy
-```
-
-Download or clone this repository:
+Clone this repository and run the installation script as root:
 ```shell
 git clone git@github.com:jle64/gnome-shell-pass-search-provider.git
-```
-
-Run the installation script as root:
-```shell
 sudo ./install.sh
 ```
 
 # Post-installation
 
-Recommended : set gpg agent to use pinentry-gnome3 by adding `pinentry-program /usr/bin/pinentry-gnome3` to `~/.gnupg/gpg-agent.conf`.
+Log out and reopen your GNOME session.
 
-If you are on Xorg, restart GNOME Shell by typing 'alt + f2' then entering 'r' as command.
-If you are on Wayland, you need to close and reopen your GNOME session.
+The search provider will be loaded automatically when doing a search. You should see it enabled in GNOME Settings Search pane.
 
-The search provider should show up and be enabled in GNOME search preferences and started on demand by GNOME Shell.
-
-# OTP support
+# OTP
 
 The [pass-otp](https://github.com/tadfisher/pass-otp) extension is supported. Searches starting with `otp` will copy the otp token to the clipboard.
 
@@ -56,8 +45,9 @@ To copy the pin start the search with `:pin` and for the username `:user`.
 
 # Environment variables
 
-If you are configuring pass through environment variables, such as `PASSWORD_STORE_DIR`, make sure to set them in a way that will propagate to the search provider executable, not just in your shell.
-Setting them in `~/.profile` or `~/.pam_environment` should be sufficient, but stuff in shell-specific files such as `~/.bashrc` and co will not be picked up by gnome-shell.
+If you are configuring `pass` through environment variables, such as `PASSWORD_STORE_DIR`, make sure to set them in a way that will propagate to the search provider executable, not just in your shell.
+
+Setting them in `~/.profile` or `~/.pam_environment` should be sufficient, but stuff in shell-specific files such as `~/.bashrc` will not be picked up by gnome-shell.
 
 If your values have no effect, make sure they propagate to the script environment:
 ```shell
@@ -71,9 +61,12 @@ Otherwise they are sent to the clipboard using `pass -c` which defaults to expir
 
 # Compatibility
 
-This implements the `org.gnome.Shell.SearchProvider2` D-Bus API and has been tested with GNOME Shell 3.22-3.32.
+This implements the `org.gnome.Shell.SearchProvider2` D-Bus API and has been tested with GNOME Shell 3.22-3.38. This uses the `org.gnome.GPaste1` or `org.gnome.GPaste2` versions of the GPaste D-Bus API to add passwords to GPaste.
 
 # Troubleshooting
 
-If this does not work for you, make sure to look to wherever GNOME and D-Bus are logging for error messages (using `journalctl --user` on systemd-using systems).
+If you don't see passphrase prompts when your key is locked, it might be because GPG is not using the right pinentry program. You can force gpg-agent to use pinentry-gnome3 by adding `pinentry-program /usr/bin/pinentry-gnome3` to `~/.gnupg/gpg-agent.conf`.
+
+If you encounter problems, make sure to look to wherever GNOME and D-Bus are logging for error messages. You can do this using `journalctl --user` on systemd-using systems.
+
 Don't hesitate to open an issue.

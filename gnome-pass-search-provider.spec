@@ -13,6 +13,8 @@ Requires:       python3-fuzzywuzzy
 Requires:       python3-Levenshtein
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
+%global debug_package %{nil}
+
 %description
 A Gnome Shell search provider for zx2c4/pass (passwordstore.org) that sends passwords to clipboard (or GPaste).
 
