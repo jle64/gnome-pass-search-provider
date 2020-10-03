@@ -10,6 +10,14 @@ Supports OTP, fields and can use GPaste.
 ## Arch Linux
 Install `gnome-pass-search-provider-git` from the AUR.
 
+## Fedora
+Enable the copr repo and install the package with DNF:
+
+```shell
+dnf copr enable jle64/gnome-pass-search-provider
+dnf install gnome-pass-search-provider
+```
+
 ## Manual
 
 Ensure that python>=3.5 as well as the dbus, gobject, fuzzywuzzy modules are installed. They should all be packaged under python-name or python3-name depending on your distribution.
