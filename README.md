@@ -7,8 +7,13 @@ Supports OTP, fields and can use GPaste.
 ![Sreencapture](misc/screencapture.gif)
 
 # Installation
+[![Packaging status](https://repology.org/badge/vertical-allrepos/gnome-pass-search-provider.svg)](https://repology.org/project/gnome-pass-search-provider/versions)
+
 ## Arch Linux
 Install `gnome-pass-search-provider-git` from the AUR.
+
+## Debian, Ubuntu and derivatives
+If a package is available for your distribution version (see above for packaging status), just install `gnome-pass-search-provider` through APT.
 
 ## Fedora
 Enable the copr repo and install the package with DNF:
