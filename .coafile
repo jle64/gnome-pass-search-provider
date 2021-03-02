@@ -1,4 +1,0 @@
-[python]
-bears = PyUnusedCodeBear,PySafetyBear,PyFlakesBear,PEP8Bear,BanditBear,PyCommentedCodeBear,VultureBear,InvalidLinkBear,PyImportSortBear
-files = *.py
-use_spaces = true

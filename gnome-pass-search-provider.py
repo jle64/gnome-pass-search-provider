@@ -14,27 +14,26 @@
 # You should have received a copy of the GNU General Public License
 # along with gnome-pass-search-provider. If not, see
 # <http://www.gnu.org/licenses/>.
-
 # Copyright (C) 2017 Jonathan Lestrelin
 # Author: Jonathan Lestrelin <jonathan.lestrelin@gmail.com>
-
 # This project was based on gnome-shell-search-github-repositories
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Ralph Bean <rbean@redhat.com>
 # which itself was based on fedmsg-notify
 # Copyright (C) 2012 Red Hat, Inc.
 # Author: Luke Macken <lmacken@redhat.com>
-
-import dbus
-import dbus.service
 import re
 import subprocess
+from os import getenv
+from os import walk
+from os.path import expanduser
+from os.path import join as path_join
 
+import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
-from fuzzywuzzy import process, fuzz
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 from gi.repository import GLib
-from os import getenv, walk
-from os.path import expanduser, join as path_join
 
 # Convenience shorthand for declaring dbus interface methods.
 # s.b.n. -> search_bus_name
@@ -165,7 +164,7 @@ class SearchPassService(dbus.service.Object):
     def send_password_to_native_clipboard(self, base_args, name, field=None):
         if field is not None:
             self.notify(
-                f"Cannot copy field values.",
+                "Cannot copy field values.",
                 body="This feature requires GPaste.",
                 error=True,
             )
