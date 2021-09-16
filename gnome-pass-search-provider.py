@@ -51,6 +51,7 @@ class SearchPassService(dbus.service.Object):
 
     bus_name = "org.gnome.Pass.SearchProvider"
     _object_path = "/" + bus_name.replace(".", "/")
+    use_bw = False
 
     def __init__(self):
         self.session_bus = dbus.SessionBus()
@@ -66,7 +67,14 @@ class SearchPassService(dbus.service.Object):
 
     @dbus.service.method(in_signature="as", out_signature="as", **sbn)
     def GetInitialResultSet(self, terms):
-        return self.get_result_set(terms)
+        try:
+            if terms[0] == "bw":
+                self.use_bw = True
+                return self.get_bw_result_set(terms)
+        except NameError:
+            pass
+        self.use_bw = False
+        return self.get_pass_result_set(terms)
 
     @dbus.service.method(in_signature="as", out_signature="aa{sv}", **sbn)
     def GetResultMetas(self, ids):
@@ -81,13 +89,31 @@ class SearchPassService(dbus.service.Object):
 
     @dbus.service.method(in_signature="asas", out_signature="as", **sbn)
     def GetSubsearchResultSet(self, previous_results, new_terms):
-        return self.get_result_set(new_terms)
+        if self.use_bw:
+            return self.get_bw_result_set(new_terms)
+        else:
+            return self.get_pass_result_set(new_terms)
 
     @dbus.service.method(in_signature="asu", terms="as", timestamp="u", **sbn)
     def LaunchSearch(self, terms, timestamp):
         pass
 
-    def get_result_set(self, terms):
+    def get_bw_result_set(self, terms):
+        name = "".join(terms[1:])
+
+        password_list = subprocess.check_output(
+            ["rbw", "list"], stderr=subprocess.STDOUT, universal_newlines=True
+        ).split("\n")[:-1]
+
+        results = [
+            e[0]
+            for e in process.extract(
+                name, password_list, limit=5, scorer=fuzz.partial_ratio
+            )
+        ]
+        return results
+
+    def get_pass_result_set(self, terms):
         if terms[0] == "otp":
             field = terms[0]
         elif terms[0].startswith(":"):
@@ -180,7 +206,9 @@ class SearchPassService(dbus.service.Object):
 
     def send_password_to_clipboard(self, name):
         field = None
-        if name.startswith("otp "):
+        if self.use_bw:
+            base_args = ["rbw", "get"]
+        elif name.startswith("otp "):
             base_args = ["pass", "otp", "code"]
             name = name[4:]
         else:
