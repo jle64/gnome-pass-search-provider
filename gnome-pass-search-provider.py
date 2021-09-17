@@ -149,60 +149,37 @@ class SearchPassService(dbus.service.Object):
         return results
 
     def send_password_to_gpaste(self, base_args, name, field=None):
+        gpaste = self.session_bus.get_object(
+            "org.gnome.GPaste.Daemon", "/org/gnome/GPaste"
+        )
+
+        output = subprocess.check_output(
+            base_args + [name], stderr=subprocess.STDOUT, universal_newlines=True
+        )
+        if field is not None:
+            match = re.search(
+                fr"^{field}:\s*(?P<value>.+?)$", output, flags=re.I | re.M
+            )
+            if match:
+                password = match.group("value")
+            else:
+                raise RuntimeError(f"The field {field} was not found in the pass file.")
+        else:
+            password = output.split("\n", 1)[0]
         try:
-            gpaste = self.session_bus.get_object(
-                "org.gnome.GPaste.Daemon", "/org/gnome/GPaste"
-            )
-
-            output = subprocess.check_output(
-                base_args + [name], stderr=subprocess.STDOUT, universal_newlines=True
-            )
-            if field is not None:
-                match = re.search(
-                    fr"^{field}:\s*(?P<value>.+?)$", output, flags=re.I | re.M
-                )
-                if match:
-                    password = match.group("value")
-                else:
-                    raise RuntimeError(
-                        f"The field {field} was not found in " + "the pass file."
-                    )
-            else:
-                password = output.split("\n", 1)[0]
-            try:
-                gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste1")
-            except dbus.DBusException:
-                gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste2")
-
-            if "otp" in base_args:
-                self.notify("Copied OTP password to clipboard:", body=f"<b>{name}</b>")
-            elif field is not None:
-                self.notify(
-                    f"Copied field {field} to clipboard:", body=f"<b>{name}</b>"
-                )
-            else:
-                self.notify("Copied password to clipboard:", body=f"<b>{name}</b>")
-        except subprocess.CalledProcessError as e:
-            self.notify("Failed to copy password!", body=e.output, error=True)
-        except RuntimeError as e:
-            self.notify("Failed to copy field!", body=e.output, error=True)
+            gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste1")
+        except dbus.DBusException:
+            gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste2")
 
     def send_password_to_native_clipboard(self, base_args, name, field=None):
-        if field is not None:
-            self.notify(
-                "Cannot copy field values.",
-                body="This feature requires GPaste.",
-                error=True,
-            )
-            return
+        if field is not None or self.use_bw:
+            raise RuntimeError("This feature requires GPaste.")
 
-        pass_cmd = subprocess.run(base_args + ["-c", name])
-        if pass_cmd.returncode:
-            self.notify("Failed to copy password!", error=True)
-        elif "otp" in base_args:
-            self.notify("Copied OTP password to clipboard:", body=f"<b>{name}</b>")
-        else:
-            self.notify("Copied password to clipboard:", body=f"<b>{name}</b>")
+        result = subprocess.run(base_args + ["-c", name])
+        if result.returncode:
+            raise RuntimeError(
+                f"Error while running pass: got return code {result.returncode}."
+            )
 
     def send_password_to_clipboard(self, name):
         field = None
@@ -216,13 +193,22 @@ class SearchPassService(dbus.service.Object):
             if name.startswith(":"):
                 field, name = name.split(" ", 1)
                 field = field[1:]
-
         try:
-            self.send_password_to_gpaste(base_args, name, field)
-        except dbus.DBusException:
-            # We couldn't join GPaste over D-Bus,
-            # use pass native clipboard copy
-            self.send_password_to_native_clipboard(base_args, name, field)
+            try:
+                self.send_password_to_gpaste(base_args, name, field)
+            except dbus.DBusException:
+                # We couldn't join GPaste over D-Bus, use native clipboard
+                self.send_password_to_native_clipboard(base_args, name, field)
+            if "otp" in base_args:
+                self.notify("Copied OTP password to clipboard:", body=f"<b>{name}</b>")
+            elif field is not None:
+                self.notify(
+                    f"Copied field {field} to clipboard:", body=f"<b>{name}</b>"
+                )
+            else:
+                self.notify("Copied password to clipboard:", body=f"<b>{name}</b>")
+        except (subprocess.CalledProcessError, FileNotFoundError, RuntimeError) as e:
+            self.notify("Failed to copy password or field!", body=e.output, error=True)
 
     def notify(self, message, body="", error=False):
         try:
