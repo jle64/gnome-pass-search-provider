@@ -1,8 +1,8 @@
-A search provider for GNOME Shell that adds support for searching in zx2c4/[pass](https://www.passwordstore.org/).
+A search provider for GNOME Shell that adds support for searching passwords in zx2c4/[pass](https://www.passwordstore.org/) or in the [rbw](https://github.com/doy/rbw) Bitwarden/Vaultwarden client.
 
 Names of passwords will show up in GNOME Shell searches, choosing one will copy the corresponding content to the clipboard.
 
-Supports OTP, fields and can use GPaste.
+Can use the [GPaste](https://github.com/Keruspe/GPaste) clipboard manager, supports OTP and fields (pass only, requires GPaste).
 
 ![Sreencapture](misc/screencapture.gif)
 
@@ -29,11 +29,12 @@ dnf install gnome-pass-search-provider
 
 ## Manual
 
-Ensure that python>=3.5 as well as the dbus, gobject, fuzzywuzzy Python modules are installed. They should all be packaged under python-name or python3-name depending on your distribution.
+Ensure that python>=3.7 as well as the dbus, gobject and fuzzywuzzy Python modules are installed. They should all be packaged under python-name or python3-name depending on your distribution.
 
 Clone this repository and run the installation script as root:
 ```
-git clone git@github.com:jle64/gnome-shell-pass-search-provider.git
+git clone https://github.com/jle64/gnome-pass-search-provider.git
+cd gnome-pass-search-provider
 sudo ./install.sh
 ```
 
@@ -61,6 +62,10 @@ To copy the pin start the search with `:pin` and for the username with `:user`.
 # OTP
 
 The [pass-otp](https://github.com/tadfisher/pass-otp) extension is supported. Searches starting with `otp` will copy the otp token to the clipboard.
+
+# Bitwarden/Vaultwarden
+
+If [rbw](https://github.com/doy/rbw) is installed, it can be used instead of pass by prefixing a search with `bw`. Non prefixed searches will still go through pass if present.
 
 # Environment variables
 

@@ -51,6 +51,7 @@ class SearchPassService(dbus.service.Object):
 
     bus_name = "org.gnome.Pass.SearchProvider"
     _object_path = "/" + bus_name.replace(".", "/")
+    use_bw = False
 
     def __init__(self):
         self.session_bus = dbus.SessionBus()
@@ -66,7 +67,14 @@ class SearchPassService(dbus.service.Object):
 
     @dbus.service.method(in_signature="as", out_signature="as", **sbn)
     def GetInitialResultSet(self, terms):
-        return self.get_result_set(terms)
+        try:
+            if terms[0] == "bw":
+                self.use_bw = True
+                return self.get_bw_result_set(terms)
+        except NameError:
+            pass
+        self.use_bw = False
+        return self.get_pass_result_set(terms)
 
     @dbus.service.method(in_signature="as", out_signature="aa{sv}", **sbn)
     def GetResultMetas(self, ids):
@@ -81,13 +89,31 @@ class SearchPassService(dbus.service.Object):
 
     @dbus.service.method(in_signature="asas", out_signature="as", **sbn)
     def GetSubsearchResultSet(self, previous_results, new_terms):
-        return self.get_result_set(new_terms)
+        if self.use_bw:
+            return self.get_bw_result_set(new_terms)
+        else:
+            return self.get_pass_result_set(new_terms)
 
     @dbus.service.method(in_signature="asu", terms="as", timestamp="u", **sbn)
     def LaunchSearch(self, terms, timestamp):
         pass
 
-    def get_result_set(self, terms):
+    def get_bw_result_set(self, terms):
+        name = "".join(terms[1:])
+
+        password_list = subprocess.check_output(
+            ["rbw", "list"], stderr=subprocess.STDOUT, universal_newlines=True
+        ).split("\n")[:-1]
+
+        results = [
+            e[0]
+            for e in process.extract(
+                name, password_list, limit=5, scorer=fuzz.partial_ratio
+            )
+        ]
+        return results
+
+    def get_pass_result_set(self, terms):
         if terms[0] == "otp":
             field = terms[0]
         elif terms[0].startswith(":"):
@@ -123,31 +149,56 @@ class SearchPassService(dbus.service.Object):
         return results
 
     def send_password_to_gpaste(self, base_args, name, field=None):
-        try:
-            gpaste = self.session_bus.get_object(
-                "org.gnome.GPaste.Daemon", "/org/gnome/GPaste"
-            )
+        gpaste = self.session_bus.get_object(
+            "org.gnome.GPaste.Daemon", "/org/gnome/GPaste"
+        )
 
-            output = subprocess.check_output(
-                base_args + [name], stderr=subprocess.STDOUT, universal_newlines=True
+        output = subprocess.check_output(
+            base_args + [name], stderr=subprocess.STDOUT, universal_newlines=True
+        )
+        if field is not None:
+            match = re.search(
+                fr"^{field}:\s*(?P<value>.+?)$", output, flags=re.I | re.M
             )
-            if field is not None:
-                match = re.search(
-                    fr"^{field}:\s*(?P<value>.+?)$", output, flags=re.I | re.M
-                )
-                if match:
-                    password = match.group("value")
-                else:
-                    raise RuntimeError(
-                        f"The field {field} was not found in " + "the pass file."
-                    )
+            if match:
+                password = match.group("value")
             else:
-                password = output.split("\n", 1)[0]
-            try:
-                gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste1")
-            except dbus.DBusException:
-                gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste2")
+                raise RuntimeError(f"The field {field} was not found in the pass file.")
+        else:
+            password = output.split("\n", 1)[0]
+        try:
+            gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste1")
+        except dbus.DBusException:
+            gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste2")
 
+    def send_password_to_native_clipboard(self, base_args, name, field=None):
+        if field is not None or self.use_bw:
+            raise RuntimeError("This feature requires GPaste.")
+
+        result = subprocess.run(base_args + ["-c", name])
+        if result.returncode:
+            raise RuntimeError(
+                f"Error while running pass: got return code {result.returncode}."
+            )
+
+    def send_password_to_clipboard(self, name):
+        field = None
+        if self.use_bw:
+            base_args = ["rbw", "get"]
+        elif name.startswith("otp "):
+            base_args = ["pass", "otp", "code"]
+            name = name[4:]
+        else:
+            base_args = ["pass", "show"]
+            if name.startswith(":"):
+                field, name = name.split(" ", 1)
+                field = field[1:]
+        try:
+            try:
+                self.send_password_to_gpaste(base_args, name, field)
+            except dbus.DBusException:
+                # We couldn't join GPaste over D-Bus, use native clipboard
+                self.send_password_to_native_clipboard(base_args, name, field)
             if "otp" in base_args:
                 self.notify("Copied OTP password to clipboard:", body=f"<b>{name}</b>")
             elif field is not None:
@@ -156,45 +207,8 @@ class SearchPassService(dbus.service.Object):
                 )
             else:
                 self.notify("Copied password to clipboard:", body=f"<b>{name}</b>")
-        except subprocess.CalledProcessError as e:
-            self.notify("Failed to copy password!", body=e.output, error=True)
-        except RuntimeError as e:
-            self.notify("Failed to copy field!", body=e.output, error=True)
-
-    def send_password_to_native_clipboard(self, base_args, name, field=None):
-        if field is not None:
-            self.notify(
-                "Cannot copy field values.",
-                body="This feature requires GPaste.",
-                error=True,
-            )
-            return
-
-        pass_cmd = subprocess.run(base_args + ["-c", name])
-        if pass_cmd.returncode:
-            self.notify("Failed to copy password!", error=True)
-        elif "otp" in base_args:
-            self.notify("Copied OTP password to clipboard:", body=f"<b>{name}</b>")
-        else:
-            self.notify("Copied password to clipboard:", body=f"<b>{name}</b>")
-
-    def send_password_to_clipboard(self, name):
-        field = None
-        if name.startswith("otp "):
-            base_args = ["pass", "otp", "code"]
-            name = name[4:]
-        else:
-            base_args = ["pass", "show"]
-            if name.startswith(":"):
-                field, name = name.split(" ", 1)
-                field = field[1:]
-
-        try:
-            self.send_password_to_gpaste(base_args, name, field)
-        except dbus.DBusException:
-            # We couldn't join GPaste over D-Bus,
-            # use pass native clipboard copy
-            self.send_password_to_native_clipboard(base_args, name, field)
+        except (subprocess.CalledProcessError, FileNotFoundError, RuntimeError) as e:
+            self.notify("Failed to copy password or field!", body=str(e), error=True)
 
     def notify(self, message, body="", error=False):
         try:
