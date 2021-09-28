@@ -20,6 +20,9 @@ apt install gnome-pass-search-provider
 ```
 
 ## Fedora
+
+[![Copr build status](https://copr.fedorainfracloud.org/coprs/jle64/gnome-pass-search-provider/package/gnome-pass-search-provider/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/jle64/gnome-pass-search-provider/package/gnome-pass-search-provider/)
+
 Enable the copr repo and install the package with DNF:
 
 ```
