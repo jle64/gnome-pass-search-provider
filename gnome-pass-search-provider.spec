@@ -1,6 +1,6 @@
 Name:           gnome-pass-search-provider
 Version:        master
-Release:        0
+Release:        1
 License:        GPL-3.0+
 Summary:        Gnome Shell search provider for zx2c4/pass
 Url:            https://github.com/jle64/gnome-pass-search-provider
