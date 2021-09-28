@@ -208,7 +208,7 @@ class SearchPassService(dbus.service.Object):
             else:
                 self.notify("Copied password to clipboard:", body=f"<b>{name}</b>")
         except (subprocess.CalledProcessError, FileNotFoundError, RuntimeError) as e:
-            self.notify("Failed to copy password or field!", body=e.output, error=True)
+            self.notify("Failed to copy password or field!", body=str(e), error=True)
 
     def notify(self, message, body="", error=False):
         try:

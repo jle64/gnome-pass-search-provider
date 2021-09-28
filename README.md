@@ -2,7 +2,7 @@ A search provider for GNOME Shell that adds support for searching passwords in z
 
 Names of passwords will show up in GNOME Shell searches, choosing one will copy the corresponding content to the clipboard.
 
-Supports OTP, fields (pass only) and can use GPaste (pass or rbw).
+Can use the [GPaste](https://github.com/Keruspe/GPaste) clipboard manager, supports OTP and fields (pass only, requires GPaste).
 
 ![Sreencapture](misc/screencapture.gif)
 
@@ -33,7 +33,8 @@ Ensure that python>=3.7 as well as the dbus, gobject and fuzzywuzzy Python modul
 
 Clone this repository and run the installation script as root:
 ```
-git clone git@github.com:jle64/gnome-shell-pass-search-provider.git
+git clone https://github.com/jle64/gnome-pass-search-provider.git
+cd gnome-pass-search-provider
 sudo ./install.sh
 ```
 
