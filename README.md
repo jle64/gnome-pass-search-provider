@@ -32,7 +32,7 @@ dnf install gnome-pass-search-provider
 
 ## Manual
 
-Ensure that python>=3.7 as well as the dbus, gobject and fuzzywuzzy Python modules are installed. They should all be packaged under python-name or python3-name depending on your distribution.
+Ensure that python>=3.7 as well as the dbus, gobject and thefuzz (formerly fuzzywuzzy, might still be packaged under that name in your distribution) Python modules are installed. They should all be packaged under python-name or python3-name depending on your distribution.
 
 Clone this repository and run the installation script as root:
 ```
