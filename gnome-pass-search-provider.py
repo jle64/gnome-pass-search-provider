@@ -31,8 +31,13 @@ from os.path import join as path_join
 
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
+
+try:
+    from thefuzz import fuzz
+    from thefuzz import process
+except ModuleNotFoundError:
+    from fuzzywuzzy import fuzz
+    from fuzzywuzzy import process
 from gi.repository import GLib
 
 # Convenience shorthand for declaring dbus interface methods.
