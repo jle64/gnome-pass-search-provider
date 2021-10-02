@@ -1,5 +1,5 @@
 [Unit]
-Description=Pass search provider for GNOME Shell daemon
+Description=Pass and Bitwarden search provider for GNOME Shell daemon
 Wants=org.gnome.GPaste.service
 
 [Service]
