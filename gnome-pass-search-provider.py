@@ -56,7 +56,6 @@ class SearchPassService(dbus.service.Object):
 
     bus_name = "org.gnome.Pass.SearchProvider"
     _object_path = "/" + bus_name.replace(".", "/")
-    use_bw = False
 
     def __init__(self):
         self.session_bus = dbus.SessionBus()
@@ -65,6 +64,9 @@ class SearchPassService(dbus.service.Object):
         self.password_store = getenv("PASSWORD_STORE_DIR") or expanduser(
             "~/.password-store"
         )
+        self.password_executable = getenv("PASSWORD_EXECUTABLE") or "pass"
+        self.password_mode = getenv("PASSWORD_MODE") or "pass"
+        self.clipboard_executable = getenv("CLIPBOARD_EXECUTABLE") or "wl-copy"
 
     @dbus.service.method(in_signature="sasu", **sbn)
     def ActivateResult(self, id, terms, timestamp):
@@ -72,14 +74,10 @@ class SearchPassService(dbus.service.Object):
 
     @dbus.service.method(in_signature="as", out_signature="as", **sbn)
     def GetInitialResultSet(self, terms):
-        try:
-            if terms[0] == "bw":
-                self.use_bw = True
-                return self.get_bw_result_set(terms)
-        except NameError:
-            pass
-        self.use_bw = False
-        return self.get_pass_result_set(terms)
+        if self.password_mode == "bw":
+            return self.get_bw_result_set(terms)
+        else:
+            return self.get_pass_result_set(terms)
 
     @dbus.service.method(in_signature="as", out_signature="aa{sv}", **sbn)
     def GetResultMetas(self, ids):
@@ -94,7 +92,7 @@ class SearchPassService(dbus.service.Object):
 
     @dbus.service.method(in_signature="asas", out_signature="as", **sbn)
     def GetSubsearchResultSet(self, previous_results, new_terms):
-        if self.use_bw:
+        if self.password_mode == "bw":
             return self.get_bw_result_set(new_terms)
         else:
             return self.get_pass_result_set(new_terms)
@@ -104,10 +102,10 @@ class SearchPassService(dbus.service.Object):
         pass
 
     def get_bw_result_set(self, terms):
-        name = "".join(terms[1:])
+        name = "".join(terms)
 
         password_list = subprocess.check_output(
-            ["rbw", "list"], universal_newlines=True
+            [self.password_executable, "list"], universal_newlines=True
         ).split("\n")[:-1]
 
         results = [
@@ -158,12 +156,10 @@ class SearchPassService(dbus.service.Object):
             "org.gnome.GPaste.Daemon", "/org/gnome/GPaste"
         )
 
-        output = subprocess.check_output(
-            base_args + [name], universal_newlines=True
-        )
+        output = subprocess.check_output(base_args + [name], universal_newlines=True)
         if field is not None:
             match = re.search(
-                fr"^{field}:\s*(?P<value>.+?)$", output, flags=re.I | re.M
+                rf"^{field}:\s*(?P<value>.+?)$", output, flags=re.I | re.M
             )
             if match:
                 password = match.group("value")
@@ -177,24 +173,32 @@ class SearchPassService(dbus.service.Object):
             gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste2")
 
     def send_password_to_native_clipboard(self, base_args, name, field=None):
-        if field is not None or self.use_bw:
+        if field is not None:
             raise RuntimeError("This feature requires GPaste.")
 
-        result = subprocess.run(base_args + ["-c", name])
-        if result.returncode:
-            raise RuntimeError(
-                f"Error while running pass: got return code {result.returncode}."
-            )
+        if self.password_mode == "bw":
+            p1 = subprocess.Popen(base_args + [name], stdout=subprocess.PIPE)
+            p2 = subprocess.run(self.clipboard_executable, stdin=p1.stdout)
+            if p1.returncode or p2.returncode:
+                raise RuntimeError(
+                    f"Error while running rbw: got return codes: {p1.returncode} {p2.returncode}."
+                )
+        else:
+            result = subprocess.run(base_args + ["-c", name])
+            if result.returncode:
+                raise RuntimeError(
+                    f"Error while running pass: got return code: {result.returncode}."
+                )
 
     def send_password_to_clipboard(self, name):
         field = None
-        if self.use_bw:
-            base_args = ["rbw", "get"]
+        if self.password_mode == "bw":
+            base_args = [self.password_executable, "get"]
         elif name.startswith("otp "):
-            base_args = ["pass", "otp", "code"]
+            base_args = [self.password_executable, "otp", "code"]
             name = name[4:]
         else:
-            base_args = ["pass", "show"]
+            base_args = [self.password_executable, "show"]
             if name.startswith(":"):
                 field, name = name.split(" ", 1)
                 field = field[1:]
