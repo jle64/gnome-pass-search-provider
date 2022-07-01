@@ -127,9 +127,9 @@ This implements the `org.gnome.Shell.SearchProvider2` D-Bus API and has been tes
 
 ## Environment variables have no effect
 
-If you are configuring `pass` through environment variables, such as `PASSWORD_STORE_DIR`, make sure to set them in a way that will propagate to the search provider executable, not just in your shell.
+If you are configuring `pass` using environment variables, such as `PASSWORD_STORE_DIR`, make sure to set them in a way that will propagate to the search provider executable, not just in your shell.
 
-Setting them in `~/.profile` should be sufficient, but keep in mind that stuff in shell-specific files such as `~/.bashrc` only affects the command-line shell and will not propagate to the script. On systemd-based OSes, you can also directly set them in `~/.config/environment.d/*.conf` (see `man environment.d`).
+On systemd-based OSes, you can directly set them in `~/.config/environment.d/*.conf` (see `man environment.d`). On other systems, setting them in `~/.profile` should be sufficient, but keep in mind that some shell-specific files such as `~/.bashrc` might be only loaded in non-login interactive shells and will thus not propagate to the script.
 
 If your values have no effect, make sure they propagate to the script environment. You can check this by displaying the process environment with `ps` and looking for your values here:
 ```
