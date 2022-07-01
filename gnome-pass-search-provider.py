@@ -107,7 +107,7 @@ class SearchPassService(dbus.service.Object):
         name = "".join(terms[1:])
 
         password_list = subprocess.check_output(
-            ["rbw", "list"], stderr=subprocess.STDOUT, universal_newlines=True
+            ["rbw", "list"], universal_newlines=True
         ).split("\n")[:-1]
 
         results = [
@@ -159,7 +159,7 @@ class SearchPassService(dbus.service.Object):
         )
 
         output = subprocess.check_output(
-            base_args + [name], stderr=subprocess.STDOUT, universal_newlines=True
+            base_args + [name], universal_newlines=True
         )
         if field is not None:
             match = re.search(
