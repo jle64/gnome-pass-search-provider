@@ -74,6 +74,10 @@ user: username
 pin: 123456
 ```
 
+## Disabling notifications
+
+Set `DISABLE_NOTIFICATIONS` environment variable.
+
 To copy the pin start the search with `:pin` and for the username with `:user`.
 
 # Alternative password providers
