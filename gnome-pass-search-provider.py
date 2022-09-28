@@ -222,7 +222,7 @@ class SearchPassService(dbus.service.Object):
             self.notify("Failed to copy password or field!", body=str(e), error=True)
 
     def notify(self, message, body="", error=False):
-        if not self.disable_notifications:
+        if error or not self.disable_notifications:
             try:
                 self.session_bus.get_object(
                     "org.freedesktop.Notifications", "/org/freedesktop/Notifications"
