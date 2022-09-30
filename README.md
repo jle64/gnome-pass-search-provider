@@ -76,6 +76,10 @@ pin: 123456
 
 To copy the pin start the search with `:pin` and for the username with `:user`.
 
+## Disabling notifications
+
+Set the `DISABLE_NOTIFICATIONS` environment variable to `True`.
+
 # Alternative password providers
 
 ## Gopass and other pass-compatible tools

@@ -67,6 +67,7 @@ class SearchPassService(dbus.service.Object):
         self.password_executable = getenv("PASSWORD_EXECUTABLE") or "pass"
         self.password_mode = getenv("PASSWORD_MODE") or "pass"
         self.clipboard_executable = getenv("CLIPBOARD_EXECUTABLE") or "wl-copy"
+        self.disable_notifications = getenv("DISABLE_NOTIFICATIONS").lower() == "true" or False
 
     @dbus.service.method(in_signature="sasu", **sbn)
     def ActivateResult(self, id, terms, timestamp):
@@ -220,6 +221,8 @@ class SearchPassService(dbus.service.Object):
             self.notify("Failed to copy password or field!", body=str(e), error=True)
 
     def notify(self, message, body="", error=False):
+        if not error and self.disable_notifications:
+            return
         try:
             self.session_bus.get_object(
                 "org.freedesktop.Notifications", "/org/freedesktop/Notifications"
