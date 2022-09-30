@@ -67,8 +67,7 @@ class SearchPassService(dbus.service.Object):
         self.password_executable = getenv("PASSWORD_EXECUTABLE") or "pass"
         self.password_mode = getenv("PASSWORD_MODE") or "pass"
         self.clipboard_executable = getenv("CLIPBOARD_EXECUTABLE") or "wl-copy"
-        self.disable_notifications = getenv("DISABLE_NOTIFICATIONS")
-        self.disable_notifications = self.disable_notifications and self.disable_notifications != "0"
+        self.disable_notifications = getenv("DISABLE_NOTIFICATIONS").lower() == "true" or False
 
     @dbus.service.method(in_signature="sasu", **sbn)
     def ActivateResult(self, id, terms, timestamp):
@@ -222,23 +221,24 @@ class SearchPassService(dbus.service.Object):
             self.notify("Failed to copy password or field!", body=str(e), error=True)
 
     def notify(self, message, body="", error=False):
-        if error or not self.disable_notifications:
-            try:
-                self.session_bus.get_object(
-                    "org.freedesktop.Notifications", "/org/freedesktop/Notifications"
-                ).Notify(
-                    "Pass",
-                    0,
-                    "dialog-password",
-                    message,
-                    body,
-                    "",
-                    {"transient": False if error else True},
-                    0 if error else 3000,
-                    dbus_interface="org.freedesktop.Notifications",
-                )
-            except dbus.DBusException as err:
-                print(f"Error {err} while trying to display {message}.")
+        if not error and self.disable_notifications:
+            return
+        try:
+            self.session_bus.get_object(
+                "org.freedesktop.Notifications", "/org/freedesktop/Notifications"
+            ).Notify(
+                "Pass",
+                0,
+                "dialog-password",
+                message,
+                body,
+                "",
+                {"transient": False if error else True},
+                0 if error else 3000,
+                dbus_interface="org.freedesktop.Notifications",
+            )
+        except dbus.DBusException as err:
+            print(f"Error {err} while trying to display {message}.")
 
 
 if __name__ == "__main__":
