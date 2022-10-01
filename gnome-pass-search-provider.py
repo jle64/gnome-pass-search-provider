@@ -67,7 +67,9 @@ class SearchPassService(dbus.service.Object):
         self.password_executable = getenv("PASSWORD_EXECUTABLE") or "pass"
         self.password_mode = getenv("PASSWORD_MODE") or "pass"
         self.clipboard_executable = getenv("CLIPBOARD_EXECUTABLE") or "wl-copy"
-        self.disable_notifications = getenv("DISABLE_NOTIFICATIONS").lower() == "true" or False
+        self.disable_notifications = (
+            getenv("DISABLE_NOTIFICATIONS", False).lower() == "true"
+        )
 
     @dbus.service.method(in_signature="sasu", **sbn)
     def ActivateResult(self, id, terms, timestamp):
