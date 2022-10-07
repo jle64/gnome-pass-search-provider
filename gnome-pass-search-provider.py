@@ -68,7 +68,7 @@ class SearchPassService(dbus.service.Object):
         self.password_mode = getenv("PASSWORD_MODE") or "pass"
         self.clipboard_executable = getenv("CLIPBOARD_EXECUTABLE") or "wl-copy"
         self.disable_notifications = (
-            getenv("DISABLE_NOTIFICATIONS", False).lower() == "true"
+            getenv("DISABLE_NOTIFICATIONS", "false").lower() == "true"
         )
 
     @dbus.service.method(in_signature="sasu", **sbn)
