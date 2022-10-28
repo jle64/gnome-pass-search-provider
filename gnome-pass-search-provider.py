@@ -105,6 +105,11 @@ class SearchPassService(dbus.service.Object):
         pass
 
     def get_bw_result_set(self, terms):
+        if terms[0].startswith(":"):
+            field = terms[0][1:]
+            terms = terms[1:]
+        else:
+            field = None
         name = "".join(terms)
 
         password_list = subprocess.check_output(
@@ -117,6 +122,8 @@ class SearchPassService(dbus.service.Object):
                 name, password_list, limit=5, scorer=fuzz.partial_ratio
             )
         ]
+        if field is not None:
+            results = [f":{field} {r}" for r in results]
         return results
 
     def get_pass_result_set(self, terms):
@@ -194,17 +201,21 @@ class SearchPassService(dbus.service.Object):
                 )
 
     def send_password_to_clipboard(self, name):
-        field = None
+        if name.startswith(":"):
+            field, name = name.split(" ", 1)
+            field = field[1:]
+        else:
+            field = None
+
         if self.password_mode == "bw":
-            base_args = [self.password_executable, "get"]
+            base_args = [self.password_executable, "get", "--full"]
         elif name.startswith("otp "):
             base_args = [self.password_executable, "otp", "code"]
             name = name[4:]
+            field = None
         else:
             base_args = [self.password_executable, "show"]
-            if name.startswith(":"):
-                field, name = name.split(" ", 1)
-                field = field[1:]
+
         try:
             try:
                 self.send_password_to_gpaste(base_args, name, field)
