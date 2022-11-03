@@ -161,39 +161,43 @@ class SearchPassService(dbus.service.Object):
             results = [f":{field} {r}" for r in results]
         return results
 
+    def get_value_from_output(self, output, field=None):
+        if field is not None:
+            match = re.search(
+                rf"^{field}:\s*(?P<value>.+?)$", output, flags=re.I | re.M
+            )
+            if match:
+                value = match.group("value")
+            else:
+                raise RuntimeError(f"The field {field} was not found in the password entry.")
+        else:
+            value = output.split("\n", 1)[0]
+        return value
+
     def send_password_to_gpaste(self, base_args, name, field=None):
         gpaste = self.session_bus.get_object(
             "org.gnome.GPaste.Daemon", "/org/gnome/GPaste"
         )
 
         output = subprocess.check_output(base_args + [name], universal_newlines=True)
-        if field is not None:
-            match = re.search(
-                rf"^{field}:\s*(?P<value>.+?)$", output, flags=re.I | re.M
-            )
-            if match:
-                password = match.group("value")
-            else:
-                raise RuntimeError(f"The field {field} was not found in the pass file.")
-        else:
-            password = output.split("\n", 1)[0]
+        value = self.get_value_from_output(output, field)
         try:
-            gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste1")
+            gpaste.AddPassword(name, value, dbus_interface="org.gnome.GPaste1")
         except dbus.DBusException:
-            gpaste.AddPassword(name, password, dbus_interface="org.gnome.GPaste2")
+            gpaste.AddPassword(name, value, dbus_interface="org.gnome.GPaste2")
 
     def send_password_to_native_clipboard(self, base_args, name, field=None):
-        if field is not None:
-            raise RuntimeError("This feature requires GPaste.")
-
         if self.password_mode == "bw":
-            p1 = subprocess.Popen(base_args + [name], stdout=subprocess.PIPE)
-            p2 = subprocess.run(self.clipboard_executable, stdin=p1.stdout)
-            if p1.returncode or p2.returncode:
+            output = subprocess.check_output(base_args + [name], universal_newlines=True)
+            value = self.get_value_from_output(output, field)
+            p1 = subprocess.run(self.clipboard_executable, input=value, text=True)
+            if p1.returncode:
                 raise RuntimeError(
-                    f"Error while running rbw: got return codes: {p1.returncode} {p2.returncode}."
+                    f"Error while running copying to clipboard: got return code: {p1.returncode}."
                 )
         else:
+            if field is not None:
+                raise RuntimeError("This feature requires GPaste.")
             result = subprocess.run(base_args + ["-c", name])
             if result.returncode:
                 raise RuntimeError(
