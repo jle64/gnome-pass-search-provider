@@ -70,10 +70,15 @@ class SearchPassService(dbus.service.Object):
         self.disable_notifications = (
             getenv("DISABLE_NOTIFICATIONS", "false").lower() == "true"
         )
+        # For checking if the database is unlocked yet:
+        self.database_unlocked = True
 
     @dbus.service.method(in_signature="sasu", **sbn)
     def ActivateResult(self, id, terms, timestamp):
-        self.send_password_to_clipboard(id)
+        if self.database_unlocked:
+            self.send_password_to_clipboard(id)
+        else:
+            self.unlock_database()
 
     @dbus.service.method(in_signature="as", out_signature="as", **sbn)
     def GetInitialResultSet(self, terms):
@@ -104,26 +109,39 @@ class SearchPassService(dbus.service.Object):
     def LaunchSearch(self, terms, timestamp):
         pass
 
+    def unlock_database(self):
+        if self.password_mode == "bw":
+            subprocess.run([self.password_executable, "unlock"])
+
     def get_bw_result_set(self, terms):
-        if terms[0].startswith(":"):
-            field = terms[0][1:]
-            terms = terms[1:]
+        self.database_unlocked = not bool(subprocess.run(
+            [self.password_executable, "unlocked"]
+            ).returncode)
+
+        if not self.database_unlocked:
+            results = [f"Unlock {self.password_executable}"]
+
         else:
-            field = None
-        name = "".join(terms)
+            if terms[0].startswith(":"):
+                field = terms[0][1:]
+                terms = terms[1:]
+            else:
+                field = None
+            name = "".join(terms)
 
-        password_list = subprocess.check_output(
-            [self.password_executable, "list"], universal_newlines=True
-        ).split("\n")[:-1]
+            password_list = subprocess.check_output(
+                [self.password_executable, "list"], universal_newlines=True
+            ).split("\n")[:-1]
 
-        results = [
-            e[0]
-            for e in process.extract(
-                name, password_list, limit=5, scorer=fuzz.partial_ratio
-            )
-        ]
-        if field is not None:
-            results = [f":{field} {r}" for r in results]
+            results = [
+                e[0]
+                for e in process.extract(
+                    name, password_list, limit=5, scorer=fuzz.partial_ratio
+                )
+            ]
+            if field is not None:
+                results = [f":{field} {r}" for r in results]
+        
         return results
 
     def get_pass_result_set(self, terms):
