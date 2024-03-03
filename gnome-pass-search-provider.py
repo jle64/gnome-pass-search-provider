@@ -141,7 +141,7 @@ class SearchPassService(dbus.service.Object):
             ]
             if field is not None:
                 results = [f":{field} {r}" for r in results]
-        
+
         return results
 
     def get_pass_result_set(self, terms):
@@ -232,7 +232,10 @@ class SearchPassService(dbus.service.Object):
         if self.password_mode == "bw":
             base_args = [self.password_executable, "get", "--full"]
         elif name.startswith("otp "):
-            base_args = [self.password_executable, "otp", "code"]
+            if self.password_executable == "gopass":
+                base_args = [self.password_executable, "otp", "-o"]
+            else:
+                base_args = [self.password_executable, "otp", "code"]
             name = name[4:]
             field = None
         else:
