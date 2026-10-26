@@ -204,9 +204,11 @@ class SearchPassService(dbus.service.Object):
         output = subprocess.check_output(base_args + [name], universal_newlines=True)
         value = self.get_value_from_output(output, field)
         try:
-            gpaste.AddPassword(name, value, dbus_interface="org.gnome.GPaste1")
-        except dbus.DBusException:
             gpaste.AddPassword(name, value, dbus_interface="org.gnome.GPaste2")
+        except dbus.DBusException:
+            timeout = 45 # seconds
+            # can no longer overwrite active gpaste entries with the same name
+            gpaste.AddPassword(f"{name}:{field}" if field else name, value, timeout, dbus_interface="org.gnome.GPaste3")
 
     def send_password_to_native_clipboard(self, base_args, name, field=None):
         if self.password_mode == "bw":
